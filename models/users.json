@@ -1,16 +1,1 @@
-[
-  {
-    "id": "50665862-37d0-4d31-91d3-8b5b54548cce",
-    "name": "Srinivas",
-    "email": "srinivasmura111@gmail.com",
-    "password": "$2b$10$FiX8mQXLJ0393tEAEQhiX.t.QtkVscsk8zW1y5QFWUtyfSeWR6jWm",
-    "createdAt": "2026-08-09T18:01:55.927Z"
-  },
-  {
-    "id": "7bc2632c-1394-4d1c-89ac-9801faa7fd07",
-    "name": "Muramalla",
-    "email": "srinivasmura@yeahoo.co.in",
-    "password": "$2b$10$PfiTwvEqTYh5FVnN9.MKS.zIc2phfLOEJ5tHVh.vKr23XJiOUHrom",
-    "createdAt": "2026-08-09T18:10:39.293Z"
-  }
-]
+[]

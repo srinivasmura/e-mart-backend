@@ -71,6 +71,73 @@ const register = async (req, res) => {
   }
 };
 
+
+//Login page API
+
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required"
+      });
+    }
+
+    // Read users
+    const users = JSON.parse(fs.readFileSync(usersFile));
+
+    // Find user by email
+    const user = users.find(
+      (user) => user.email.toLowerCase() === email.toLowerCase()
+    );
+
+    // User not found
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password"
+      });
+    }
+
+    // Compare password with hashed password
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    // Invalid password
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password"
+      });
+    }
+
+    // Login successful
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email
+      }
+    });
+
+  } catch (error) {
+    console.error("Login Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
 module.exports = {
-  register
+  register,
+  login
 };

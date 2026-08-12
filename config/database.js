@@ -7,10 +7,14 @@ const connection = mysql.createConnection({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 
-  // TiDB Cloud requires TLS for public endpoint connections
-  ssl: {
-    minVersion: "TLSv1.2",
-  },
+  // Enable SSL only when DB_SSL=true
+  ...(process.env.DB_SSL === "true"
+    ? {
+      ssl: {
+        minVersion: "TLSv1.2",
+      },
+    }
+    : {}),
 });
 
 connection.connect((err) => {
@@ -19,11 +23,10 @@ connection.connect((err) => {
     return;
   }
 
-  console.log("✅ TiDB Database Connected Successfully");
+  console.log("✅ Database Connected Successfully");
 });
 
 module.exports = connection;
-
 
 
 

@@ -25,63 +25,48 @@ const register = async (req, res) => {
     }
 
     // Check if email already exists
-    const checkUserQuery =
-      "SELECT id FROM users WHERE email = ?";
+    const checkUserQuery = `
+      SELECT id
+      FROM users
+      WHERE email = ?
+    `;
 
-    connection.query(
+    const [results] = await connection.query(
       checkUserQuery,
-      [email],
-      async (err, results) => {
-        if (err) {
-          console.error("Database error:", err);
-
-          return res.status(500).json({
-            message: "Database error",
-          });
-        }
-
-        if (results.length > 0) {
-          return res.status(409).json({
-            message: "Email already registered",
-          });
-        }
-
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Insert new user
-        const insertUserQuery = `
-          INSERT INTO users
-          (first_name, last_name, email, password, phone)
-          VALUES (?, ?, ?, ?, ?)
-        `;
-
-        connection.query(
-          insertUserQuery,
-          [
-            first_name,
-            last_name,
-            email,
-            hashedPassword,
-            phone || null,
-          ],
-          (err, result) => {
-            if (err) {
-              console.error("Insert user error:", err);
-
-              return res.status(500).json({
-                message: "Failed to create user",
-              });
-            }
-
-            return res.status(201).json({
-              message: "User registered successfully",
-              userId: result.insertId,
-            });
-          }
-        );
-      }
+      [email]
     );
+
+    if (results.length > 0) {
+      return res.status(409).json({
+        message: "Email already registered",
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert new user
+    const insertUserQuery = `
+      INSERT INTO users
+      (first_name, last_name, email, password, phone)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+
+    const [result] = await connection.query(
+      insertUserQuery,
+      [
+        first_name,
+        last_name,
+        email,
+        hashedPassword,
+        phone || null,
+      ]
+    );
+
+    return res.status(201).json({
+      message: "User registered successfully",
+      userId: result.insertId,
+    });
   } catch (error) {
     console.error("Register error:", error);
 
@@ -97,6 +82,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     // Validate input
     if (!email || !password) {
       return res.status(400).json({
@@ -111,64 +97,55 @@ const login = async (req, res) => {
       WHERE email = ?
     `;
 
-    connection.query(
-      query,
-      [email],
-      async (err, results) => {
-        if (err) {
-          console.error("Database error:", err);
+    const [results] = await connection.query(query, [email]);
 
-          return res.status(500).json({
-            message: "Database error",
-          });
-        }
+    // User not found
+    if (results.length === 0) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
 
-        // User not found
-        if (results.length === 0) {
-          return res.status(401).json({
-            message: "Invalid email or password",
-          });
-        }
+    const user = results[0];
 
-        const user = results[0];
-        // Compare password with bcrypt hash
-        const passwordMatch = await bcrypt.compare(
-          password,
-          user.password
-        );
+    const passwordMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
 
-        if (!passwordMatch) {
-          return res.status(401).json({
-            message: "Invalid email or password",
-          });
-        }
+    console.log("Password match:", passwordMatch);
 
-        // Generate JWT
-        const token = jwt.sign(
-          {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-          },
-          process.env.JWT_SECRET,
-          {
-            expiresIn: "1h",
-          }
-        );
-        return res.status(200).json({
-          message: "Login successful",
-          token,
-          user: {
-            id: user.id,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            email: user.email,
-            phone: user.phone,
-            role: user.role,
-          },
-        });
+    if (!passwordMatch) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    // Generate JWT
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
       }
     );
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+      },
+    });
   } catch (error) {
     console.error("Login error:", error);
 

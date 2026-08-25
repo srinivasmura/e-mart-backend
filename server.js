@@ -30,6 +30,14 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Vercel runs this file as a serverless function and calls the exported
+// app directly per-request — it never actually runs app.listen(). Locally
+// (and on Railway/Render, etc.) there's no VERCEL env var, so it starts
+// a normal persistent server as before.
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
